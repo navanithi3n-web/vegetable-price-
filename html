@@ -1,0 +1,1241 @@
+ml>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vegetable Price Tracker with Expert Advice</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #4CAF50, #8BC34A); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        #app { background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); padding: 2rem; min-width: 300px; max-width: 900px; width: 100%; }
+        .screen { text-align: center; }
+        .hidden { display: none; }
+        h1 { margin-bottom: 2rem; color: #2E7D32; }
+        button { background: #4CAF50; color: white; border: none; padding: 12px 24px; margin: 10px; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #45a049; }
+        .back-btn { background: #757575; margin-bottom: 20px; }
+        .back-btn:hover { background: #616161; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; }
+        form { max-width: 300px; margin: 0 auto; }
+        .vegetable-card { border: 1px solid #ddd; border-radius: 10px; padding: 15px; text-align: center; background: #f9f9f9; cursor: pointer; transition: transform 0.2s; }
+        .vegetable-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .demo-info { font-size: 12px; color: #666; margin-top: 10px; padding: 8px; background: #f5f5f5; border-radius: 4px; }
+        #chat-messages { height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 10px; padding: 15px; margin: 20px 0; background: #fafafa; }
+        #chat-input { border: 2px solid #ddd; transition: border-color 0.3s; }
+        #chat-input:focus { border-color: #4CAF50; outline: none; }
+        #vegetables-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px; margin-top: 20px; }
+        .price { font-size: 18px; font-weight: bold; color: #2E7D32; margin-top: 10px; }
+        .view-graph-btn { background: #2196F3; color: white; border: none; padding: 10px 20px; margin: 10px; border-radius: 5px; cursor: pointer; font-size: 14px; }
+        .view-graph-btn:hover { background: #1976D2; }
+        .price-history-list { max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 10px; padding: 10px; margin-top: 20px; }
+        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid #eee; font-size: 16px; transition: background 0.2s; }
+        .history-item:last-child { border-bottom: none; }
+        .history-item:hover { background: #f9f9f9; }
+        .date-month { font-weight: bold; color: #333; min-width: 80px; }
+        .equals { color: #666; margin: 0 10px; }
+        .rate { font-weight: bold; color: #2E7D32; }
+        #priceChart { border: 1px solid #ddd; border-radius: 10px; background: white; margin: 20px auto; display: block; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .market-status { display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+        .status-open { background: #e8f5e8; color: #2e7d32; }
+        .status-closed { background: #ffebee; color: #d32f2f; }
+        
+        /* Camera Styles */
+        #camera-container { position: relative; width: 100%; max-width: 500px; margin: 20px auto; border-radius: 15px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+        #camera-video { width: 100%; height: 300px; object-fit: cover; background: #000; }
+        #camera-canvas { display: none; }
+        .camera-controls { display: flex; justify-content: center; gap: 15px; margin: 20px 0; }
+        .capture-btn { background: linear-gradient(45deg, #E91E63, #F06292); padding: 15px 30px; border-radius: 50px; font-size: 18px; box-shadow: 0 4px 15px rgba(233,30,99,0.4); }
+        .capture-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(233,30,99,0.6); }
+        .disease-result { margin: 20px 0; padding: 20px; border-radius: 15px; background: linear-gradient(135deg, #fff3e0, #ffe0b2); border-left: 5px solid #FF9800; }
+        .disease-alert { background: linear-gradient(135deg, #ffebee, #ffcdd2); border-left: 5px solid #f44336; animation: pulse 2s infinite; }
+        .healthy-result { background: linear-gradient(135deg, #e8f5e8, #c8e6c9); border-left: 5px solid #4CAF50; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+        .modern-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .glass-effect { backdrop-filter: blur(10px); background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Language Selection -->
+        <div id="language-selection" class="screen">
+            <h1>🥬 Vegetable Price Tracker</h1>
+            <p style="margin-bottom: 2rem; color: #666;">Select Language / மொழியைத் தேர்ந்தெடுக்கவும்</p>
+            <button onclick="selectLanguage('en')">🇬🇧 English</button>
+            <button onclick="selectLanguage('ta')">🇮🇳 தமிழ்</button>
+        </div>
+
+        <!-- Role Selection -->
+        <div id="role-selection" class="screen hidden">
+            <button onclick="goBack()" class="back-btn">← Back</button>
+            <h1 id="role-title">Select Role</h1>
+            <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+                <div style="text-align: center;">
+                    <button onclick="selectRole('marketer')" id="marketer-btn" style="display: block; margin: 10px auto;">📊 Marketer</button>
+                    <small id="marketer-desc" style="color: #666;">View market prices</small>
+                </div>
+                <div style="text-align: center;">
+                    <button onclick="selectRole('farmer')" id="farmer-btn" style="display: block; margin: 10px auto;">🌾 Farmer</button>
+                    <small id="farmer-desc" style="color: #666;">Track price trends</small>
+                </div>
+                <div style="text-align: center;">
+                    <button onclick="selectRole('expert-advice')" id="expert-advice-btn" style="display: block; margin: 10px auto; background: #FF9800;">🎓 Expert Advice</button>
+                    <small id="expert-advice-desc" style="color: #666;">Get expert guidance</small>
+                </div>
+                <div style="text-align: center;">
+                    <button onclick="openAIChat()" id="ai-chat-btn" style="display: block; margin: 10px auto; background: #9C27B0;">🤖 AI Assistant</button>
+                    <small id="ai-chat-desc" style="color: #666;">Chat with AI</small>
+                </div>
+                <div style="text-align: center;">
+                    <button onclick="openDiseaseDetection()" id="disease-detection-btn" style="display: block; margin: 10px auto; background: #E91E63;">📷 Disease Scanner</button>
+                    <small id="disease-detection-desc" style="color: #666;">Scan plant diseases</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expert Advice Role Selection -->
+        <div id="expert-role-selection" class="screen hidden">
+            <button onclick="goBack()" class="back-btn">← Back</button>
+            <h1 id="expert-role-title">Choose Role</h1>
+            <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+                <div style="text-align: center;">
+                    <button onclick="selectExpertRole('expert')" id="expert-role-expert-btn" style="display: block; margin: 10px auto; background: #2196F3;">👨🔬 Expert</button>
+                    <small id="expert-role-expert-desc" style="color: #666;">Provide expert advice</small>
+                </div>
+                <div style="text-align: center;">
+                    <button onclick="selectExpertRole('farmer-advice')" id="expert-role-farmer-btn" style="display: block; margin: 10px auto; background: #4CAF50;">🌾 Farmer</button>
+                    <small id="expert-role-farmer-desc" style="color: #666;">Seek expert advice</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expert Login -->
+        <div id="expert-login" class="screen hidden">
+            <button onclick="goBack()" class="back-btn">← Back</button>
+            <h1 id="expert-login-title">🔐 Expert Login</h1>
+            <form onsubmit="expertLogin(event)">
+                <div style="text-align: left;">
+                    <label for="expert-username" id="expert-username-label" style="display: block; margin-bottom: 5px; font-weight: bold;">Expert Username:</label>
+                    <input type="text" id="expert-username" placeholder="Enter expert username" required>
+                </div>
+                <div style="text-align: left;">
+                    <label for="expert-password" id="expert-password-label" style="display: block; margin-bottom: 5px; font-weight: bold;">Expert Password:</label>
+                    <input type="password" id="expert-password" placeholder="Enter expert password" required>
+                </div>
+                <button type="submit" id="expert-login-btn">🚀 Login</button>
+                <div class="demo-info" id="expert-demo-info">
+                    <strong>Demo Credentials:</strong><br>
+                    Username: <code>expert</code><br>
+                    Password: <code>expert123</code>
+                </div>
+            </form>
+        </div>
+
+        <!-- Expert Category Selection -->
+        <div id="expert-category" class="screen hidden">
+            <button onclick="goBack()" class="back-btn">← Back</button>
+            <h1 id="expert-category-title">🎯 Select Expert Category</h1>
+            <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+                <div style="text-align: center;">
+                    <button onclick="selectExpertCategory('soil')" id="soil-expert-btn" style="display: block; margin: 10px auto; background: #8BC34A;">🌱 Soil Expert</button>
+                </div>
+                <div style="text-align: center;">
+                    <button onclick="selectExpertCategory('pests')" id="pests-expert-btn" style="display: block; margin: 10px auto; background: #FF5722;">🐛 Pests Expert</button>
+                </div>
+                <div style="text-align: center;">
+                    <button onclick="selectExpertCategory('diseases')" id="diseases-expert-btn" style="display: block; margin: 10px auto; background: #9C27B0;">🦠 Diseases Expert</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Chat Interface -->
+        <div id="ai-chat" class="screen hidden">
+            <button onclick="goBack()" class="back-btn">← Back</button>
+            <h1 id="ai-chat-title">🤖 AI Assistant</h1>
+            <div id="ai-chat-messages" style="height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 10px; padding: 15px; margin: 20px 0; background: #fafafa;">
+                <div style="padding: 10px; background: #e3f2fd; border-radius: 10px; margin-bottom: 10px;">
+                    <strong>AI Assistant:</strong> Hello! I'm your AI assistant for vegetable farming. Ask me anything about crops, prices, farming techniques, or market trends!
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="ai-chat-input" placeholder="Type your message..." style="flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 5px;" onkeypress="if(event.key==='Enter') sendAIMessage()">
+                <button onclick="sendAIMessage()" style="background: #9C27B0; padding: 12px 20px;">Send</button>
+            </div>
+        </div>
+
+        <!-- Disease Detection Camera -->
+        <div id="disease-detection" class="screen hidden">
+            <button onclick="goBack()" class="back-btn">← Back</button>
+            <h1 style="background: linear-gradient(45deg, #E91E63, #9C27B0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 2.5rem;">📷 Plant Disease Scanner</h1>
+            <p style="color: #666; margin-bottom: 20px;">Point camera at plant leaves to detect diseases</p>
+            
+            <div id="camera-container">
+                <video id="camera-video" autoplay playsinline></video>
+                <canvas id="camera-canvas"></canvas>
+            </div>
+            
+            <div class="camera-controls">
+                <button onclick="startCamera()" id="start-camera-btn" style="background: #4CAF50;">📹 Start Camera</button>
+                <button onclick="captureImage()" id="capture-btn" class="capture-btn">📸 Scan Plant</button>
+                <button onclick="stopCamera()" id="stop-camera-btn" style="background: #f44336;">⏹️ Stop Camera</button>
+            </div>
+            
+            <div id="detection-result"></div>
+        </div>
+
+        <!-- Expert ID Selection -->
+        <div id="expert-id-selection" class="screen hidden">
+            <button onclick="goBack()" class="back-btn">← Back</button>
+            <h1 id="expert-id-title">Select Expert ID</h1>
+            <div id="expert-ids-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 20px;"></div>
+        </div>
+
+        <!-- Farmer Expert Category Selection -->
+        <div id="farmer-expert-category" class="screen hidden">
+            <button onclick="goBack()" class="back-btn">← Back</button>
+            <h1 id="farmer-expert-category-title">🎯 Select Expert Category</h1>
+            <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap;">
+                <div style="text-align: center;">
+                    <button onclick="selectFarmerExpertCategory('soil')" id="farmer-soil-expert-btn" style="display: block; margin: 10px auto; background: #8BC34A;">🌱 Soil Experts</button>
+                </div>
+                <div style="text-align: center;">
+                    <button onclick="selectFarmerExpertCategory('pests')" id="farmer-pests-expert-btn" style="display: block; margin: 10px auto; background: #FF5722;">🐛 Pest Experts</button>
+                </div>
+                <div style="text-align: center;">
+                    <button onclick="selectFarmerExpertCategory('diseases')" id="farmer-diseases-expert-btn" style="display: block; margin: 10px auto; background: #9C27B0;">🦠 Disease Experts</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Farmer Expert ID Selection -->
+        <div id="farmer-expert-id-selection" class="screen hidden">
+            <button onclick="goBack()" class="back-btn">← Back</button>
+            <h1 id="farmer-expert-id-title">Select Expert</h1>
+            <div id="farmer-expert-ids-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 20px;"></div>
+        </div>
+
+        <!-- Marketer Login -->
+        <div id="marketer-login" class="screen hidden">
+            <button onclick="goBack()" class="back-btn">← Back</button>
+            <h1 id="login-title">🔐 Marketer Login</h1>
+            <form onsubmit="marketerLogin(event)">
+                <div style="text-align: left;">
+                    <label for="username" style="display: block; margin-bottom: 5px; font-weight: bold;">Username:</label>
+                    <input type="text" id="username" placeholder="Enter username" required>
+                </div>
+                <div style="text-align: left;">
+                    <label for="password" style="display: block; margin-bottom: 5px; font-weight: bold;">Password:</label>
+                    <input type="password" id="password" placeholder="Enter password" required>
+                </div>
+                <button type="submit" id="login-btn">🚀 Login</button>
+                <div class="demo-info">
+                    <strong>Demo Credentials:</strong><br>
+                    Username: <code>admin</code><br>
+                    Password: <code>password</code>
+                </div>
+            </form>
+        </div>
+
+        <!-- District Selection (Marketer) -->
+        <div id="district-selection" class="screen hidden">
+            <button onclick="goBack()" class="back-btn">← Back</button>
+            <h1 id="district-title">📍 Select District</h1>
+            <p style="margin-bottom: 20px; color: #666;">Choose your district from Tamil Nadu</p>
+            <select id="district-select" onchange="selectDistrict()">
+                <option value="">🏘️ Choose District</option>
+            </select>
+        </div>
+
+        <!-- Farmer District Selection -->
+        <div id="farmer-district" class="screen hidden">
+            <button onclick="goBack()" class="back-btn">← Back</button>
+            <h1 id="district-title-farmer">📍 Select District</h1>
+            <p style="margin-bottom: 20px; color: #666;">Choose your district from Tamil Nadu</p>
+            <select id="farmer-district-select" onchange="selectFarmerDistrict()">
+                <option value="">🏘️ Choose District</option>
+            </select>
+        </div>
+
+        <!-- Price Display -->
+        <div id="price-display" class="screen hidden">
+            <button onclick="goBack()" class="back-btn">← Back</button>
+            <div id="header-info">
+                <h1 id="price-title">💰 Vegetable Prices</h1>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 10px;">
+                    <div>
+                        <div id="current-time" style="font-weight: bold;">⏰ Current Time: --</div>
+                        <div id="next-update" style="font-size: 12px; color: #666;">🔄 Next Update: --</div>
+                    </div>
+                    <div class="market-status status-open" id="market-status">
+                        🟢 Market Open
+                    </div>
+                </div>
+            </div>
+            <div id="vegetables-grid"></div>
+        </div>
+
+        <!-- Chat Interface -->
+        <div id="chat-interface" class="screen hidden">
+            <button onclick="goBack()" class="back-btn">← Back</button>
+            <h1 id="chat-title">💬 Chat with Expert</h1>
+            <div id="chat-info" style="text-align: center; margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 10px;">
+                <div id="expert-info" style="font-weight: bold;"></div>
+                <div id="chat-status" style="font-size: 12px; color: #666; margin-top: 5px;">🟢 Online</div>
+            </div>
+            <div id="chat-messages"></div>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="chat-input" placeholder="Type your message..." style="flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 5px;">
+                <button onclick="sendMessage()" style="padding: 12px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">📤 Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentLanguage = 'en';
+        let currentRole = '';
+        let selectedDistrict = '';
+        let screenHistory = [];
+        let updateTimeInterval = null;
+        let scheduleInterval = null;
+        let currentExpertCategory = '';
+        let currentExpertId = '';
+        let chatMessages = [];
+        let isExpert = false;
+
+        const districts = [
+            'Chennai', 'Coimbatore', 'Madurai', 'Tiruchirappalli', 'Salem', 'Tirunelveli',
+            'Erode', 'Vellore', 'Thoothukudi', 'Dindigul', 'Thanjavur', 'Ranipet',
+            'Sivaganga', 'Karur', 'Ramanathapuram', 'Virudhunagar', 'Cuddalore',
+            'Nagapattinam', 'Villupuram', 'Tiruvarur', 'Ariyalur', 'Perambalur',
+            'The Nilgiris', 'Dharmapuri', 'Krishnagiri', 'Tirupattur', 'Kallakurichi',
+            'Chengalpattu', 'Kanchipuram', 'Tiruvallur', 'Tiruvannamalai', 'Namakkal',
+            'Pudukkottai', 'Tenkasi', 'Mayiladuthurai', 'Kanyakumari'
+        ];
+
+        const vegetables = [
+            { name: { en: 'Tomato', ta: 'தக்காளி' }, image: '🍅', basePrice: 45 },
+            { name: { en: 'Potato', ta: 'உருளைக்கிழங்கு' }, image: '🥔', basePrice: 35 },
+            { name: { en: 'Onion', ta: 'வெங்காயம்' }, image: '🧅', basePrice: 40 },
+            { name: { en: 'Green Chilli', ta: 'பச்சை மிளகாய்' }, image: '🌶️', basePrice: 80 },
+            { name: { en: 'Ladyfinger', ta: 'வெண்டைக்காய்' }, image: '🫛', basePrice: 55 }
+        ];
+
+        const translations = {
+            en: {
+                'role-title': '👥 Select Your Role',
+                'marketer-btn': '📊 Marketer',
+                'farmer-btn': '🌾 Farmer',
+                'expert-advice-btn': '🎓 Expert Advice',
+                'marketer-desc': 'View market prices',
+                'farmer-desc': 'Track price trends',
+                'expert-advice-desc': 'Get expert guidance',
+                'expert-role-title': 'Choose Role',
+                'expert-role-expert-btn': '👨🔬 Expert',
+                'expert-role-farmer-btn': '🌾 Farmer',
+                'expert-role-expert-desc': 'Provide expert advice',
+                'expert-role-farmer-desc': 'Seek expert advice',
+                'expert-login-title': '🔐 Expert Login',
+                'expert-username-label': 'Expert Username:',
+                'expert-password-label': 'Expert Password:',
+                'expert-login-btn': '🚀 Login',
+                'expert-demo-info': '<strong>Demo Credentials:</strong><br>Username: <code>expert</code><br>Password: <code>expert123</code>',
+                'expert-category-title': '🎯 Select Expert Category',
+                'soil-expert-btn': '🌱 Soil Expert',
+                'pests-expert-btn': '🐛 Pests Expert',
+                'diseases-expert-btn': '🦠 Diseases Expert',
+                'farmer-expert-category-title': '🎯 Select Expert Category',
+                'farmer-soil-expert-btn': '🌱 Soil Experts',
+                'farmer-pests-expert-btn': '🐛 Pest Experts',
+                'farmer-diseases-expert-btn': '🦠 Disease Experts',
+                'login-title': '🔐 Marketer Login',
+                'login-btn': '🚀 Login',
+                'district-title': '📍 Select District',
+                'district-title-farmer': '📍 Select District',
+                'price-title': '💰 Vegetable Prices',
+                'price-history-title': '📈 Price History (Oct-Nov 2025)',
+                'view-graph-btn': '📊 View Graph',
+                'back-btn': '← Back',
+                'current-time': '⏰ Current Time: ',
+                'next-update': '🔄 Next Update: ',
+                'market-open': '🟢 Market Open',
+                'market-closed': '🔴 Market Closed',
+                'price-per-kg': '/kg',
+                'invalid-credentials': '❌ Invalid credentials! Please try again.'
+            },
+            ta: {
+                'role-title': '👥 உங்கள் பாத்திரத்தைத் தேர்ந்தெடுக்கவும்',
+                'marketer-btn': '📊 சந்தைப்படுத்துபவர்',
+                'farmer-btn': '🌾 விவசாயி',
+                'expert-advice-btn': '🎓 நிபுணர் ஆலோசனை',
+                'marketer-desc': 'சந்தை விலைகளைப் பார்க்கவும்',
+                'farmer-desc': 'விலை போக்குகளைக் கண்காணிக்கவும்',
+                'expert-advice-desc': 'நிபுணர் வழிகாட்டுதல் பெறவும்',
+                'expert-role-title': 'பாத்திரத்தைத் தேர்ந்தெடுக்கவும்',
+                'expert-role-expert-btn': '👨🔬 நிபுணர்',
+                'expert-role-farmer-btn': '🌾 விவசாயி',
+                'expert-role-expert-desc': 'நிபுணர் ஆலோசனை வழங்கவும்',
+                'expert-role-farmer-desc': 'நிபுணர் ஆலோசனை பெறவும்',
+                'expert-login-title': '🔐 நிபுணர் உள்நுழைவு',
+                'expert-username-label': 'நிபுணர் பயனர்பெயர்:',
+                'expert-password-label': 'நிபுணர் கடவுச்சொல்:',
+                'expert-login-btn': '🚀 உள்நுழைக',
+                'expert-demo-info': '<strong>டெமோ அறிமுக விவரங்கள்:</strong><br>பயனர்பெயர்: <code>expert</code><br>கடவுச்சொல்: <code>expert123</code>',
+                'expert-category-title': '🎯 நிபுணர் வகையைத் தேர்ந்தெடுக்கவும்',
+                'soil-expert-btn': '🌱 மண் நிபுணர்',
+                'pests-expert-btn': '🐛 பூச்சி நிபுணர்',
+                'diseases-expert-btn': '🦠 நோய் நிபுணர்',
+                'farmer-expert-category-title': '🎯 நிபுணர் வகையைத் தேர்ந்தெடுக்கவும்',
+                'farmer-soil-expert-btn': '🌱 மண் நிபுணர்கள்',
+                'farmer-pests-expert-btn': '🐛 பூச்சி நிபுணர்கள்',
+                'farmer-diseases-expert-btn': '🦠 நோய் நிபுணர்கள்',
+                'login-title': '🔐 சந்தைப்படுத்துபவர் உள்நுழைவு',
+                'login-btn': '🚀 உள்நுழைக',
+                'district-title': '📍 மாவட்டத்தைத் தேர்ந்தெடுக்கவும்',
+                'district-title-farmer': '📍 மாவட்டத்தைத் தேர்ந்தெடுக்கவும்',
+                'price-title': '💰 காய்கறி விலைகள்',
+                'price-history-title': '📈 விலை வரலாறு (அக்டோபர்-நவம்பர் 2025)',
+                'view-graph-btn': '📊 வரைபடத்தை பார்க்கவும்',
+                'back-btn': '← பின்செல்',
+                'current-time': '⏰ தற்போதைய நேரம்: ',
+                'next-update': '🔄 அடுத்த புதுப்பிப்பு: ',
+                'market-open': '🟢 சந்தை திறந்துள்ளது',
+                'market-closed': '🔴 சந்தை மூடப்பட்டுள்ளது',
+                'price-per-kg': '/கிலோ',
+                'invalid-credentials': '❌ தவறான அறிமுக விவரங்கள்! மீண்டும் முயற்சிக்கவும்.'
+            }
+        };
+
+        function selectLanguage(lang) {
+            currentLanguage = lang;
+            updateLanguage();
+            showScreen('role-selection');
+        }
+
+        function updateLanguage() {
+            Object.keys(translations[currentLanguage]).forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    if (id === 'expert-demo-info') {
+                        element.innerHTML = translations[currentLanguage][id];
+                    } else {
+                        element.textContent = translations[currentLanguage][id];
+                    }
+                }
+            });
+            updateBackButtons();
+        }
+
+        function selectRole(role) {
+            currentRole = role;
+            if (role === 'marketer') {
+                showScreen('marketer-login');
+            } else if (role === 'expert-advice') {
+                showScreen('expert-role-selection');
+            } else {
+                populateFarmerDistricts();
+                showScreen('farmer-district');
+            }
+        }
+
+        function selectExpertRole(role) {
+            if (role === 'expert') {
+                isExpert = true;
+                showScreen('expert-login');
+            } else {
+                isExpert = false;
+                showScreen('farmer-expert-category');
+            }
+        }
+
+        function expertLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('expert-username').value;
+            const password = document.getElementById('expert-password').value;
+            
+            if (username === 'expert' && password === 'expert123') {
+                showScreen('expert-category');
+            } else {
+                alert('Invalid expert credentials! Please try again.');
+            }
+        }
+
+        function selectExpertCategory(category) {
+            currentExpertCategory = category;
+            displayExpertIds();
+            showScreen('expert-id-selection');
+        }
+
+        function selectFarmerExpertCategory(category) {
+            currentExpertCategory = category;
+            displayFarmerExpertIds();
+            showScreen('farmer-expert-id-selection');
+        }
+
+        function displayExpertIds() {
+            const grid = document.getElementById('expert-ids-grid');
+            const title = document.getElementById('expert-id-title');
+            
+            const categoryNames = {
+                'soil': 'Soil Expert',
+                'pests': 'Pests Expert', 
+                'diseases': 'Diseases Expert'
+            };
+            
+            title.textContent = `Select ${categoryNames[currentExpertCategory]}`;
+            
+            const expertIds = generateExpertIds(currentExpertCategory);
+            grid.innerHTML = '';
+            
+            expertIds.forEach(id => {
+                const card = document.createElement('div');
+                card.className = 'vegetable-card';
+                card.style.cursor = 'pointer';
+                card.innerHTML = `
+                    <div style="font-size: 24px; margin-bottom: 10px;">👨🔬</div>
+                    <h3>${id}</h3>
+                    <div style="font-size: 12px; color: #666;">Available</div>
+                `;
+                card.onclick = () => startExpertChat(id);
+                grid.appendChild(card);
+            });
+        }
+
+        function displayFarmerExpertIds() {
+            const grid = document.getElementById('farmer-expert-ids-grid');
+            const title = document.getElementById('farmer-expert-id-title');
+            
+            const categoryNames = {
+                'soil': 'Soil Expert',
+                'pests': 'Pest Expert',
+                'diseases': 'Disease Expert'
+            };
+            
+            title.textContent = `Select ${categoryNames[currentExpertCategory]}`;
+            
+            const expertIds = generateExpertIds(currentExpertCategory);
+            grid.innerHTML = '';
+            
+            expertIds.forEach(id => {
+                const card = document.createElement('div');
+                card.className = 'vegetable-card';
+                card.style.cursor = 'pointer';
+                card.innerHTML = `
+                    <div style="font-size: 24px; margin-bottom: 10px;">👨🔬</div>
+                    <h3>${id}</h3>
+                    <div style="font-size: 12px; color: #666;">Online</div>
+                `;
+                card.onclick = () => startFarmerChat(id);
+                grid.appendChild(card);
+            });
+        }
+
+        function generateExpertIds(category) {
+            const expertNames = {
+                'soil': ['Ilamaran', 'Senthil', 'Arul', 'Vetrivel'],
+                'pests': ['Maran', 'Thamizhan', 'Yazhini', 'Nila'],
+                'diseases': ['Malliga', 'Kani', 'Bharathi']
+            };
+            
+            return expertNames[category] || [];
+        }
+
+        function startExpertChat(expertId) {
+            currentExpertId = expertId;
+            initializeChat(true);
+            showScreen('chat-interface');
+        }
+
+        function startFarmerChat(expertId) {
+            currentExpertId = expertId;
+            initializeChat(false);
+            showScreen('chat-interface');
+        }
+
+        function initializeChat(isExpertMode) {
+            chatMessages = [];
+            const expertInfo = document.getElementById('expert-info');
+            const chatTitle = document.getElementById('chat-title');
+            
+            const categoryNames = {
+                'soil': 'Soil Expert',
+                'pests': 'Pests Expert',
+                'diseases': 'Diseases Expert'
+            };
+            
+            if (isExpertMode) {
+                expertInfo.textContent = `You are: ${categoryNames[currentExpertCategory]} ${currentExpertId}`;
+                chatTitle.textContent = '💬 Expert Chat Interface';
+                addMessage('system', 'You are now connected as an expert. Farmers may contact you for advice.');
+            } else {
+                expertInfo.textContent = `Connected to: ${categoryNames[currentExpertCategory]} ${currentExpertId}`;
+                chatTitle.textContent = `💬 Chat with ${categoryNames[currentExpertCategory]}`;
+                addMessage('system', `Connected to expert ${currentExpertId}. Ask your agricultural questions!`);
+            }
+            
+            displayMessages();
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            
+            if (message) {
+                addMessage('user', message);
+                input.value = '';
+                
+                setTimeout(async () => {
+                    const response = await generateResponse(message);
+                    addMessage('other', response);
+                    displayMessages();
+                }, 1000);
+                
+                displayMessages();
+            }
+        }
+
+        function addMessage(sender, text) {
+            const timestamp = new Date().toLocaleTimeString();
+            chatMessages.push({ sender, text, timestamp });
+        }
+
+        function displayMessages() {
+            const container = document.getElementById('chat-messages');
+            container.innerHTML = '';
+            
+            chatMessages.forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.style.marginBottom = '15px';
+                
+                if (msg.sender === 'system') {
+                    messageDiv.innerHTML = `
+                        <div style="text-align: center; color: #666; font-style: italic; padding: 10px; background: #f0f0f0; border-radius: 10px;">
+                            ${msg.text}
+                        </div>
+                    `;
+                } else {
+                    const isUser = msg.sender === 'user';
+                    messageDiv.innerHTML = `
+                        <div style="display: flex; justify-content: ${isUser ? 'flex-end' : 'flex-start'}; margin-bottom: 5px;">
+                            <div style="max-width: 70%; padding: 10px 15px; border-radius: 15px; background: ${isUser ? '#4CAF50' : '#e0e0e0'}; color: ${isUser ? 'white' : 'black'};">
+                                ${msg.text}
+                            </div>
+                        </div>
+                        <div style="text-align: ${isUser ? 'right' : 'left'}; font-size: 10px; color: #666; margin-bottom: 10px;">
+                            ${msg.timestamp}
+                        </div>
+                    `;
+                }
+                
+                container.appendChild(messageDiv);
+            });
+            
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function generateResponse(message) {
+            const prompt = `You are ${currentExpertId}, a ${currentExpertCategory} expert in Tamil Nadu agriculture. 
+Farmer question: ${message}
+Provide helpful, specific advice in 1-2 sentences:`;
+            
+            try {
+                // Using a free AI API (you can replace with any AI service)
+                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer YOUR_API_KEY' // Replace with your API key
+                    },
+                    body: JSON.stringify({
+                        model: 'gpt-3.5-turbo',
+                        messages: [{ role: 'user', content: prompt }],
+                        max_tokens: 100
+                    })
+                });
+                
+                const data = await response.json();
+                return data.choices[0].message.content;
+            } catch (error) {
+                // Fallback responses if AI API fails
+                const fallbackResponses = {
+                    'soil': [
+                        'For better soil health, test pH levels first. What crops are you planning?',
+                        'Add organic compost to improve soil structure. Which area needs treatment?',
+                        'Soil testing is essential. Different crops need different nutrients.'
+                    ],
+                    'pests': [
+                        'Use integrated pest management. What pests are you seeing?',
+                        'Natural predators help control pests. Describe the damage pattern.',
+                        'Early detection prevents major infestations. Monitor regularly.'
+                    ],
+                    'diseases': [
+                        'Crop rotation prevents diseases. What symptoms do you observe?',
+                        'Ensure proper ventilation and spacing. Describe affected plant parts.',
+                        'Early treatment is crucial. What stage is the crop in?'
+                    ]
+                };
+                
+                const responses = fallbackResponses[currentExpertCategory] || fallbackResponses['soil'];
+                return responses[Math.floor(Math.random() * responses.length)];
+            }
+        }
+
+        function marketerLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username === 'admin' && password === 'password') {
+                populateDistricts();
+                showScreen('district-selection');
+            } else {
+                alert(translations[currentLanguage]['invalid-credentials']);
+            }
+        }
+
+        function populateDistricts() {
+            const select = document.getElementById('district-select');
+            select.innerHTML = '<option value="">🏘️ Choose District</option>';
+            
+            districts.forEach(district => {
+                const option = document.createElement('option');
+                option.value = district;
+                option.textContent = district;
+                select.appendChild(option);
+            });
+        }
+
+        function populateFarmerDistricts() {
+            const select = document.getElementById('farmer-district-select');
+            select.innerHTML = '<option value="">🏘️ Choose District</option>';
+            
+            districts.forEach(district => {
+                const option = document.createElement('option');
+                option.value = district;
+                option.textContent = district;
+                select.appendChild(option);
+            });
+        }
+
+        function selectFarmerDistrict() {
+            const select = document.getElementById('farmer-district-select');
+            selectedDistrict = select.value;
+            if (selectedDistrict) {
+                showPrices();
+            }
+        }
+
+        function selectDistrict() {
+            const select = document.getElementById('district-select');
+            selectedDistrict = select.value;
+            if (selectedDistrict) {
+                showPrices();
+            }
+        }
+
+        function showPrices() {
+            showScreen('price-display');
+            updateTime();
+            displayVegetables();
+            
+            if (updateTimeInterval) clearInterval(updateTimeInterval);
+            if (scheduleInterval) clearInterval(scheduleInterval);
+            
+            updateTimeInterval = setInterval(updateTime, 1000);
+            scheduleUpdates();
+        }
+
+        function updateTime() {
+            const now = new Date();
+            const istTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+            
+            const timeString = istTime.toLocaleString(currentLanguage === 'ta' ? 'ta-IN' : 'en-IN', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            
+            const currentTimeEl = document.getElementById('current-time');
+            const nextUpdateEl = document.getElementById('next-update');
+            const marketStatusEl = document.getElementById('market-status');
+            
+            if (currentTimeEl) {
+                currentTimeEl.textContent = translations[currentLanguage]['current-time'] + timeString;
+            }
+            
+            const nextUpdate = getNextUpdateTime(istTime);
+            if (nextUpdateEl) {
+                nextUpdateEl.textContent = translations[currentLanguage]['next-update'] + 
+                    nextUpdate.toLocaleTimeString(currentLanguage === 'ta' ? 'ta-IN' : 'en-IN');
+            }
+            
+            const currentHour = istTime.getHours();
+            const isMarketOpen = currentHour >= 6 && currentHour < 18;
+            if (marketStatusEl) {
+                marketStatusEl.textContent = isMarketOpen ? 
+                    translations[currentLanguage]['market-open'] : 
+                    translations[currentLanguage]['market-closed'];
+                marketStatusEl.className = `market-status ${isMarketOpen ? 'status-open' : 'status-closed'}`;
+            }
+        }
+
+        function getNextUpdateTime(currentTime) {
+            const updateTimes = [6, 10, 12, 16];
+            const currentHour = currentTime.getHours();
+            
+            for (let time of updateTimes) {
+                if (currentHour < time) {
+                    const nextUpdate = new Date(currentTime);
+                    nextUpdate.setHours(time, 0, 0, 0);
+                    return nextUpdate;
+                }
+            }
+            
+            const nextUpdate = new Date(currentTime);
+            nextUpdate.setDate(nextUpdate.getDate() + 1);
+            nextUpdate.setHours(6, 0, 0, 0);
+            return nextUpdate;
+        }
+
+        function displayVegetables() {
+            const grid = document.getElementById('vegetables-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            
+            vegetables.forEach((vegetable, index) => {
+                const card = document.createElement('div');
+                card.className = 'vegetable-card';
+                
+                const currentPrice = generateCurrentPrice(vegetable.basePrice);
+                
+                card.innerHTML = `
+                    <div style="font-size: 48px; margin-bottom: 10px;">${vegetable.image}</div>
+                    <h3>${vegetable.name[currentLanguage]}</h3>
+                    <div class="price">₹${currentPrice}${translations[currentLanguage]['price-per-kg']}</div>
+                `;
+                
+                if (currentRole === 'farmer') {
+                    card.onclick = () => showPriceHistory(vegetable, index);
+                    card.style.cursor = 'pointer';
+                    card.title = 'Click to view price history';
+                }
+                
+                grid.appendChild(card);
+            });
+        }
+
+        function generateCurrentPrice(basePrice) {
+            const variation = (Math.random() - 0.5) * 20;
+            return Math.max(20, basePrice + variation).toFixed(2);
+        }
+
+        function generatePriceData(vegetable) {
+            const priceData = [];
+            const basePrice = vegetable.basePrice;
+            
+            for (let day = 1; day <= 28; day++) {
+                const variation = (Math.random() - 0.5) * 20;
+                const price = Math.max(20, basePrice + variation);
+                priceData.push({
+                    date: `${day}-Oct`,
+                    price: price.toFixed(2)
+                });
+            }
+            
+            for (let day = 1; day <= 28; day++) {
+                const variation = (Math.random() - 0.5) * 20;
+                const price = Math.max(20, basePrice + variation);
+                priceData.push({
+                    date: `${day}-Nov`,
+                    price: price.toFixed(2)
+                });
+            }
+            
+            return priceData;
+        }
+
+        function showPriceHistory(vegetable, index) {
+            const priceData = generatePriceData(vegetable);
+            
+            const historyListHtml = priceData.map(item => 
+                `<div class="history-item">
+                    <span class="date-month">${item.date}</span>
+                    <span class="equals">=</span>
+                    <span class="rate">₹${item.price}${translations[currentLanguage]['price-per-kg']}</span>
+                </div>`
+            ).join('');
+            
+            const historyHtml = `
+                <div id="price-history" class="screen">
+                    <button onclick="goBack()" class="back-btn">${translations[currentLanguage]['back-btn']}</button>
+                    <h1>${translations[currentLanguage]['price-history-title']}</h1>
+                    <div style="text-align: center; margin: 20px 0;">
+                        <div style="font-size: 48px; margin-bottom: 10px;">${vegetable.image}</div>
+                        <h2>${vegetable.name[currentLanguage]}</h2>
+                    </div>
+                    <div style="text-align: center; margin: 20px 0;">
+                        <button onclick="showPriceGraph('${vegetable.name.en}', ${index})" class="view-graph-btn">
+                            ${translations[currentLanguage]['view-graph-btn']}
+                        </button>
+                    </div>
+                    <div class="price-history-list">
+                        ${historyListHtml}
+                    </div>
+                </div>
+            `;
+            
+            const existingHistory = document.getElementById('price-history');
+            if (existingHistory) {
+                existingHistory.remove();
+            }
+            
+            document.getElementById('app').insertAdjacentHTML('beforeend', historyHtml);
+            showScreen('price-history');
+        }
+
+        function showPriceGraph(vegetableName, index) {
+            const vegetable = vegetables[index];
+            const priceData = generatePriceData(vegetable);
+            
+            const graphHtml = `
+                <div id="price-graph" class="screen">
+                    <button onclick="goBack()" class="back-btn">${translations[currentLanguage]['back-btn']}</button>
+                    <h1>${vegetable.name[currentLanguage]} - ${currentLanguage === 'en' ? '📊 Price Graph' : '📊 விலை வரைபடம்'}</h1>
+                    <div style="text-align: center; margin: 20px 0;">
+                        <div style="font-size: 48px;">${vegetable.image}</div>
+                    </div>
+                    <canvas id="priceChart" width="700" height="450"></canvas>
+                </div>
+            `;
+            
+            const existingGraph = document.getElementById('price-graph');
+            if (existingGraph) {
+                existingGraph.remove();
+            }
+            
+            document.getElementById('app').insertAdjacentHTML('beforeend', graphHtml);
+            showScreen('price-graph');
+            
+            setTimeout(() => drawPriceChart(priceData), 100);
+        }
+
+        function drawPriceChart(data) {
+            const canvas = document.getElementById('priceChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+            
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = 80;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            const prices = data.map(d => parseFloat(d.price));
+            const minPrice = Math.min(...prices);
+            let maxPrice = Math.max(...prices);
+            if (maxPrice === minPrice) maxPrice = minPrice + 1;
+            
+            // Draw axes
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, height - padding);
+            ctx.lineTo(width - padding, height - padding);
+            ctx.stroke();
+            
+            // X-axis label (Rate)
+            ctx.fillStyle = '#333';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Rate (₹/kg)', width / 2, height - 20);
+            
+            // Y-axis label (Previous Week)
+            ctx.save();
+            ctx.translate(20, height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Previous Week', 0, 0);
+            ctx.restore();
+            
+            // Draw X-axis labels (prices)
+            ctx.font = '12px Arial';
+            for (let i = 0; i <= 5; i++) {
+                const price = minPrice + (maxPrice - minPrice) * (i / 5);
+                const x = padding + (i / 5) * (width - 2 * padding);
+                ctx.fillText('₹' + price.toFixed(0), x, height - padding + 20);
+            }
+            
+            // Draw Y-axis labels (weeks)
+            const weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6', 'Week 7', 'Week 8'];
+            for (let i = 0; i < weeks.length; i++) {
+                const y = height - padding - (i / (weeks.length - 1)) * (height - 2 * padding);
+                ctx.textAlign = 'right';
+                ctx.fillText(weeks[i], padding - 10, y + 5);
+            }
+            
+            // Draw price line
+            ctx.strokeStyle = '#4CAF50';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            data.slice(0, 8).forEach((point, i) => {
+                const x = padding + ((parseFloat(point.price) - minPrice) / (maxPrice - minPrice)) * (width - 2 * padding);
+                const y = height - padding - (i / 7) * (height - 2 * padding);
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            ctx.stroke();
+            
+            // Draw data points
+            data.slice(0, 8).forEach((point, i) => {
+                const x = padding + ((parseFloat(point.price) - minPrice) / (maxPrice - minPrice)) * (width - 2 * padding);
+                const y = height - padding - (i / 7) * (height - 2 * padding);
+                
+                ctx.fillStyle = '#4CAF50';
+                ctx.beginPath();
+                ctx.arc(x, y, 6, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // Show price value on hover
+                ctx.fillStyle = '#333';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('₹' + point.price, x, y - 10);
+            });
+        }
+
+        function scheduleUpdates() {
+            const updateTimes = [6, 10, 12, 16];
+            
+            scheduleInterval = setInterval(() => {
+                const now = new Date();
+                const istTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}));
+                const currentHour = istTime.getHours();
+                const currentMinute = istTime.getMinutes();
+                
+                if (updateTimes.includes(currentHour) && currentMinute === 0) {
+                    displayVegetables();
+                }
+            }, 60000);
+        }
+
+        function showScreen(screenId) {
+            const currentScreen = document.querySelector('.screen:not(.hidden)');
+            if (currentScreen && currentScreen.id !== screenId) {
+                screenHistory.push(currentScreen.id);
+            }
+            
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.add('hidden');
+            });
+            
+            const targetScreen = document.getElementById(screenId);
+            if (targetScreen) {
+                targetScreen.classList.remove('hidden');
+            }
+            
+            updateBackButtons();
+        }
+
+        function goBack() {
+            if (screenHistory.length > 0) {
+                const previousScreen = screenHistory.pop();
+                
+                document.querySelectorAll('.screen').forEach(screen => {
+                    screen.classList.add('hidden');
+                });
+                
+                const targetScreen = document.getElementById(previousScreen);
+                if (targetScreen) {
+                    targetScreen.classList.remove('hidden');
+                }
+                
+                updateBackButtons();
+            }
+        }
+
+        function updateBackButtons() {
+            const backButtons = document.querySelectorAll('.back-btn');
+            backButtons.forEach(btn => {
+                btn.textContent = translations[currentLanguage]['back-btn'];
+            });
+        }
+
+        // AI Chat Functions
+        function openAIChat() {
+            showScreen('ai-chat');
+        }
+
+        function sendAIMessage() {
+            const input = document.getElementById('ai-chat-input');
+            const message = input.value.trim();
+            
+            if (message) {
+                addAIMessage('user', message);
+                input.value = '';
+                
+                setTimeout(async () => {
+                    const response = await generateAIResponse(message);
+                    addAIMessage('ai', response);
+                }, 1000);
+            }
+        }
+
+        function addAIMessage(sender, text) {
+            const timestamp = new Date().toLocaleTimeString();
+            const messagesContainer = document.getElementById('ai-chat-messages');
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.style.marginBottom = '15px';
+            
+            const isUser = sender === 'user';
+            messageDiv.innerHTML = `
+                <div style="display: flex; justify-content: ${isUser ? 'flex-end' : 'flex-start'}; margin-bottom: 5px;">
+                    <div style="max-width: 70%; padding: 10px 15px; border-radius: 15px; background: ${isUser ? '#9C27B0' : '#e3f2fd'}; color: ${isUser ? 'white' : 'black'};">
+                        <strong>${isUser ? 'You' : 'AI Assistant'}:</strong> ${text}
+                    </div>
+                </div>
+                <div style="text-align: ${isUser ? 'right' : 'left'}; font-size: 10px; color: #666; margin-bottom: 10px;">
+                    ${timestamp}
+                </div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        async function generateAIResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            
+            if (lowerMessage.includes('price') || lowerMessage.includes('cost')) {
+                return "Current vegetable prices are influenced by seasonal demand, weather conditions, and market supply. I recommend checking daily price updates and planning your harvest timing accordingly.";
+            } else if (lowerMessage.includes('pest') || lowerMessage.includes('insect')) {
+                return "For pest control, use integrated pest management (IPM) techniques. Combine biological controls, crop rotation, and targeted pesticide use only when necessary.";
+            } else if (lowerMessage.includes('soil') || lowerMessage.includes('fertilizer')) {
+                return "Soil health is crucial for good yields. Test your soil pH and nutrient levels regularly. Use organic compost and follow recommended fertilizer schedules for each crop.";
+            } else if (lowerMessage.includes('disease') || lowerMessage.includes('fungus')) {
+                return "Prevent diseases through proper spacing, good ventilation, and crop rotation. Early detection and treatment are key to minimizing losses.";
+            } else if (lowerMessage.includes('water') || lowerMessage.includes('irrigation')) {
+                return "Efficient water management is essential. Use drip irrigation when possible and water during cooler parts of the day to reduce evaporation.";
+            } else {
+                const responses = [
+                    "Based on current market trends, I recommend focusing on high-demand vegetables like tomatoes and onions.",
+                    "For better crop yield, consider soil testing and proper irrigation scheduling.",
+                    "Market prices fluctuate based on seasonal demand. Plan your planting accordingly.",
+                    "Consider crop rotation to maintain soil health and prevent diseases.",
+                    "Weather patterns significantly affect vegetable prices. Monitor forecasts regularly."
+                ];
+                return responses[Math.floor(Math.random() * responses.length)];
+            }
+        }
+
+        // Disease Detection Functions
+        let cameraStream = null;
+        
+        function openDiseaseDetection() {
+            showScreen('disease-detection');
+        }
+
+        async function startCamera() {
+            try {
+                const video = document.getElementById('camera-video');
+                cameraStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } 
+                });
+                video.srcObject = cameraStream;
+                
+                document.getElementById('start-camera-btn').style.display = 'none';
+                document.getElementById('capture-btn').style.display = 'inline-block';
+                document.getElementById('stop-camera-btn').style.display = 'inline-block';
+            } catch (error) {
+                alert('Camera access denied or not available. Please allow camera permissions.');
+            }
+        }
+
+        function stopCamera() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+            
+            document.getElementById('start-camera-btn').style.display = 'inline-block';
+            document.getElementById('capture-btn').style.display = 'none';
+            document.getElementById('stop-camera-btn').style.display = 'none';
+        }
+
+        function captureImage() {
+            const video = document.getElementById('camera-video');
+            const canvas = document.getElementById('camera-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0);
+            
+            analyzePlantHealth();
+        }
+
+        function analyzePlantHealth() {
+            const resultDiv = document.getElementById('detection-result');
+            
+            // Simulate AI analysis
+            resultDiv.innerHTML = '<div style="text-align: center; padding: 20px;"><div style="font-size: 24px;">🔍</div><p>Analyzing plant health...</p></div>';
+            
+            setTimeout(() => {
+                const diseases = [
+                    { name: 'Healthy Plant', severity: 'healthy', treatment: 'Plant appears healthy! Continue regular care.' },
+                    { name: 'Leaf Spot Disease', severity: 'moderate', treatment: 'Remove affected leaves. Apply copper-based fungicide.' },
+                    { name: 'Powdery Mildew', severity: 'mild', treatment: 'Improve air circulation. Use neem oil spray.' },
+                    { name: 'Bacterial Blight', severity: 'severe', treatment: 'Remove infected parts immediately. Apply bactericide.' },
+                    { name: 'Nutrient Deficiency', severity: 'mild', treatment: 'Apply balanced fertilizer. Check soil pH.' }
+                ];
+                
+                const detected = diseases[Math.floor(Math.random() * diseases.length)];
+                
+                let alertClass = 'disease-result';
+                let icon = '⚠️';
+                
+                if (detected.severity === 'healthy') {
+                    alertClass = 'healthy-result';
+                    icon = '✅';
+                } else if (detected.severity === 'severe') {
+                    alertClass = 'disease-alert';
+                    icon = '🚨';
+                }
+                
+                resultDiv.innerHTML = `
+                    <div class="${alertClass}">
+                        <h3>${icon} ${detected.name}</h3>
+                        <p><strong>Severity:</strong> ${detected.severity.toUpperCase()}</p>
+                        <p><strong>Treatment:</strong> ${detected.treatment}</p>
+                        <button onclick="captureImage()" style="margin-top: 15px; background: #2196F3;">🔄 Scan Again</button>
+                    </div>
+                `;
+            }, 2000);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            document.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && document.getElementById('chat-input') === document.activeElement) {
+                    sendMessage();
+                }
+            });
+        });
+
+        window.addEventListener('beforeunload', () => {
+            if (updateTimeInterval) clearInterval(updateTimeInterval);
+            if (scheduleInterval) clearInterval(scheduleInterval);
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+            }
+        });
+    </script>
+</body>
+</html>
